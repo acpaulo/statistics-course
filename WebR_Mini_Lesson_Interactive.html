@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini lesson — R in your browser</title>
+<style>
+:root { --ink:#20343b; --muted:#5d7077; --teal:#176b70; --pale:#edf6f4; --line:#dce7e5; --paper:#ffffff; --bg:#f4f7f6; --gold:#f3ead1; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif; }
+main { max-width:900px; margin:36px auto; padding:0 20px 60px; }
+header { background:linear-gradient(135deg,#174f59,#267b78); color:white; padding:34px 38px; border-radius:18px; margin-bottom:24px; }
+header .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:12px; opacity:.85; font-weight:700; }
+h1 { margin:8px 0 8px; font-size:clamp(27px,4vw,38px); line-height:1.15; }
+header p { margin:0; opacity:.93; max-width:700px; }
+section { background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:25px 28px; margin:18px 0; box-shadow:0 4px 16px #183c3b0a; }
+h2 { color:var(--teal); margin:0 0 12px; font-size:23px; }
+h3 { margin:20px 0 8px; font-size:17px; }
+.lead { font-size:18px; }
+.callout { background:var(--pale); border-left:4px solid var(--teal); padding:13px 16px; border-radius:7px; margin:16px 0; }
+.note { color:var(--muted); font-size:14px; }
+code { background:#eef2f2; padding:2px 5px; border-radius:4px; }
+.cell { border:1px solid #cbd9d7; border-radius:12px; overflow:hidden; margin:12px 0 18px; }
+.celltop { background:#f0f4f3; padding:9px 13px; display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#50646a; font-weight:650; }
+textarea { width:100%; min-height:130px; border:0; resize:vertical; padding:16px; font:14px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; color:#1f343a; background:#fbfdfc; outline:none; }
+button { border:0; background:var(--teal); color:white; padding:9px 16px; border-radius:8px; font-weight:700; cursor:pointer; }
+button:disabled { opacity:.55; cursor:wait; }
+.output { min-height:34px; white-space:pre-wrap; padding:13px 16px; background:#f7faf9; border-top:1px solid var(--line); font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; color:#243a40; }
+.status { font-size:13px; color:var(--muted); margin-left:10px; }
+.question { padding:12px 15px; background:#fbf7eb; border-radius:9px; margin:12px 0; }
+footer { text-align:center; color:var(--muted); font-size:13px; padding:20px; }
+@media(max-width:600px){ section{padding:20px 17px} header{padding:27px 22px} }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Mini practical · Molecular microbiology</div>
+  <h1>Does antibiotic exposure change bacterial gene expression?</h1>
+  <p>A short example of a lesson page with explanations, questions and R code that runs directly in the browser.</p>
+</header>
+
+<section>
+<h2>1 · The biological question</h2>
+<p class="lead">A researcher asks whether antibiotic exposure changes the expression of a bacterial stress-response gene in <em>E. coli</em>.</p>
+<p>Six independently grown cultures were measured in each group. Each value represents one biological replicate. These are illustrative teaching data, not real experimental measurements.</p>
+<div class="callout"><strong>Remember:</strong> the independent culture is the experimental unit. Repeated qPCR measurements from the same culture would be technical replicates; they would not increase the biological sample size.</div>
+</section>
+
+<section>
+<h2>2 · Explore the data in R</h2>
+<p>Run the first cell to load the observations and inspect the group means. You do not need to type the data yourself.</p>
+<div class="cell">
+ <div class="celltop"><span>R cell 1 · Load and summarise</span><button onclick="runCell('code1','out1')">▶ Run R</button></div>
+ <textarea id="code1" spellcheck="false">control <- c(0.85, 0.95, 1.00, 1.05, 1.15, 1.20)
+antibiotic <- c(1.15, 1.30, 1.40, 1.55, 1.65, 1.85)
+
+cat("Control mean:", mean(control), "\n")
+cat("Antibiotic mean:", mean(antibiotic), "\n")
+cat("Biological replicates per group:", length(control), "\n")</textarea>
+ <div class="output" id="out1">R output will appear here.</div>
+</div>
+<p><strong>Think about the output:</strong> Which group has the higher average expression? Does the difference alone tell us whether the result is statistically convincing?</p>
+</section>
+
+<section>
+<h2>3 · Choose and run a statistical test</h2>
+<p>The groups consist of independent cultures. We want to compare their population means. The Welch two-sample t-test is a suitable starting point; it does not assume equal population variances.</p>
+<div class="callout"><strong>Hypotheses</strong><br>H<sub>0</sub>: the population mean expression is equal in the two groups.<br>H<sub>1</sub>: the population mean expression differs between the two groups.</div>
+<p>Run the test and inspect the estimate, confidence interval and p-value.</p>
+<div class="cell">
+ <div class="celltop"><span>R cell 2 · Welch t-test</span><button onclick="runCell('code2','out2')">▶ Run R</button></div>
+ <textarea id="code2" spellcheck="false">result <- t.test(antibiotic, control)
+result</textarea>
+ <div class="output" id="out2">R output will appear here.</div>
+</div>
+<h3>Interpretation questions</h3>
+<div class="question">1. What is the estimated difference in means (antibiotic minus control)?</div>
+<div class="question">2. Does the 95% confidence interval include zero?</div>
+<div class="question">3. What does the p-value mean, assuming the null hypothesis is true?</div>
+</section>
+
+<section>
+<h2>4 · Effect size: how large is the difference?</h2>
+<p>A p-value does not measure the magnitude or biological importance of an effect. The raw mean difference is expressed in the original measurement units. Cohen's <em>d</em> expresses the difference in pooled standard-deviation units.</p>
+<div class="cell">
+ <div class="celltop"><span>R cell 3 · Calculate mean difference and Cohen's d</span><button onclick="runCell('code3','out3')">▶ Run R</button></div>
+ <textarea id="code3" spellcheck="false">n1 <- length(antibiotic)
+n2 <- length(control)
+
+pooled_sd <- sqrt(((n1 - 1) * var(antibiotic) +
+                   (n2 - 1) * var(control)) / (n1 + n2 - 2))
+
+mean_difference <- mean(antibiotic) - mean(control)
+cohens_d <- mean_difference / pooled_sd
+
+cat("Mean difference:", mean_difference, "\n")
+cat("Cohen's d:", cohens_d, "\n")</textarea>
+ <div class="output" id="out3">R output will appear here.</div>
+</div>
+<p class="note">For small samples, Hedges' g applies a correction to Cohen's d. The important point here is to understand what the effect size describes, not to memorise its formula.</p>
+<h3>Interpretation questions</h3>
+<div class="question">4. Is the estimated effect positive or negative? What does its direction mean biologically?</div>
+<div class="question">5. Why should a paper report an effect size as well as a p-value?</div>
+</section>
+
+<section>
+<h2>5 · Your short scientific conclusion</h2>
+<p>Write 3–4 sentences as if you were reporting this result in a paper. Include the direction of the difference, the statistical test, the p-value, the effect size and a cautious biological interpretation.</p>
+<div class="callout"><strong>What you are practising:</strong> reading biological data, choosing an analysis, running R code and interpreting statistical evidence. You are not being tested on memorising R syntax or calculating formulas by hand.</div>
+</section>
+<footer>Interactive R demonstration powered by WebR · Requires an internet connection for the R engine to load.</footer>
+</main>
+<script type="module">
+let webR = null;
+let initPromise = null;
+let ready = false;
+let initError = null;
+
+function setAllOutputs(message) {
+  document.querySelectorAll(".output").forEach(o => o.textContent = message);
+}
+function setButtonsDisabled(disabled) {
+  document.querySelectorAll(".cell button").forEach(b => b.disabled = disabled);
+}
+
+async function initR() {
+  if (ready) return webR;
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    setButtonsDisabled(true);
+    setAllOutputs("Connecting to WebR and starting R in this browser…");
+    try {
+      const module = await import("https://webr.r-wasm.org/latest/webr.mjs");
+      const WebR = module.WebR;
+      const ChannelType = module.ChannelType;
+      if (!WebR) throw new Error("The WebR library loaded, but its WebR class was not found.");
+      const candidate = new WebR({ channelType: ChannelType.PostMessage });
+      await candidate.init();
+      webR = candidate;
+      ready = true;
+      initError = null;
+      setAllOutputs("R is ready. Click Run R to execute this cell.");
+      return webR;
+    } catch (err) {
+      webR = null;
+      ready = false;
+      initError = err;
+      const detail = (err && err.message) ? err.message : String(err);
+      setAllOutputs(
+        "WebR could not start. This can happen if the HTML file is opened directly from Downloads, " +
+        "if the network blocks the WebR files, or if the browser is offline.\n\n" +
+        "Technical detail: " + detail + "\n\n" +
+        "Try opening this lesson from a web server (not directly as a file), and use Chrome or Edge."
+      );
+      throw err;
+    } finally {
+      setButtonsDisabled(false);
+    }
+  })();
+
+  try {
+    return await initPromise;
+  } finally {
+    if (!ready) initPromise = null;
+  }
+}
+
+async function runCell(codeId, outputId) {
+  const out = document.getElementById(outputId);
+  const btn = document.querySelector(`button[onclick="runCell('${codeId}','${outputId}')"]`);
+  btn.disabled = true;
+  out.textContent = "Preparing R…";
+  try {
+    const runtime = await initR();
+    if (!runtime) throw (initError || new Error("R did not initialise."));
+    const code = document.getElementById(codeId).value;
+    const result = await runtime.evalR(`capture.output({\n${code}\n})`);
+    const js = await result.toJs();
+    out.textContent = Array.isArray(js) ? js.join("\n") : String(js);
+  } catch (err) {
+    const detail = (err && err.message) ? err.message : String(err);
+    if (out.textContent.startsWith("WebR could not start.")) return;
+    out.textContent = "R could not run this cell: " + detail;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+window.runCell = runCell;
+initR().catch(() => {});
+</script>
+</body>
+</html>
