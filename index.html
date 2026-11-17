@@ -178,7 +178,8 @@ async function runCell(codeId, outputId) {
     const code = document.getElementById(codeId).value;
     const result = await runtime.evalR(`capture.output({\n${code}\n})`);
     const js = await result.toJs();
-    out.textContent = Array.isArray(js) ? js.join("\n") : String(js);
+    out.textContent = Array.isArray(js) ? js.join("\n") :
+  (js && Array.isArray(js.values) ? js.values.join("\n") : JSON.stringify(js, null, 2));
   } catch (err) {
     const detail = (err && err.message) ? err.message : String(err);
     if (out.textContent.startsWith("WebR could not start.")) return;
