@@ -23,3 +23,6 @@ The lessons use WebR to execute R code in the browser. Open the published pages 
 ## Student notes
 
 Each lesson has a notes area. Text is autosaved in the student's own browser storage on that device; it is not uploaded to GitHub or shared with the instructor. Students should print/save the page as PDF or copy their notes before clearing browser data or changing devices.
+
+
+Both chapters include a prominent return link to the course index. The WebR output reader decodes the byte array returned by WebR before placing it in the visible output panel.
