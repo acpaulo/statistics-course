@@ -201,8 +201,26 @@ U<sub>C</sub> + U<sub>A</sub> = n<sub>C</sub>n<sub>A</sub> = 36; report the smal
 <p>The Z statistic is compared with the <strong>standard normal distribution</strong>, N(0, 1), and the corresponding tail area gives the p-value. It does <strong>not</strong> follow a Student's t distribution and therefore has no degrees of freedom. A t distribution with degrees of freedom is used in procedures such as the t-test, not in this normal approximation to the Mann–Whitney U statistic.</p>
 <p>The exact p-value (0.00216) is preferred for this small example. The normal approximation is close, but not identical. With ties, a tie correction is needed for the variance. There is no universal sample-size cut-off at which the approximation suddenly becomes valid.</p>
 
+
+<h3>Effect size: Cliff's delta (δ)</h3>
+<p>The p-value tells us how compatible the observed data are with the null hypothesis. It does not tell us how large or biologically important the difference between groups is. For the Mann–Whitney comparison, a useful non-parametric effect size is <strong>Cliff's delta</strong>, written δ (delta).</p>
+<div class="eq">
+  <div class="formula-line">δ = P(A &gt; C) − P(A &lt; C)</div>
+  <div class="formula-line">Sample estimate: δ = (number of A–C wins − number of A–C losses) / (n<sub>A</sub> × n<sub>C</sub>)</div>
+</div>
+<p>Here, each antibiotic observation (A) is compared with each control observation (C). A pair is a <em>win</em> if A is larger than C, a <em>loss</em> if A is smaller, and a tie if they are equal. Tied pairs contribute zero to the numerator, but remain in the denominator.</p>
+<p>Cliff's delta ranges from −1 to +1:</p>
+<ul>
+<li><strong>δ = +1:</strong> every antibiotic observation is larger than every control observation (complete dominance by A).</li>
+<li><strong>δ = 0:</strong> wins and losses balance; this does not necessarily mean the two distributions are identical.</li>
+<li><strong>δ = −1:</strong> every antibiotic observation is smaller than every control observation.</li>
+</ul>
+<p>In this example, all 6 × 6 = 36 pairwise comparisons favour the antibiotic group. Therefore, δ = (36 − 0) / 36 = <strong>+1</strong>. This means complete pairwise dominance in this sample; it does <strong>not</strong> mean a 100% increase or that the measurements are one unit higher.</p>
+<p><strong>Biological interpretation:</strong> the observed biofilm measurements in the antibiotic group consistently exceed those in the control group. Report δ alongside the p-value to describe the magnitude and direction of the group separation.</p>
+
+<p>The R function <code>cliff.delta()</code> returns an object containing the estimate, confidence interval, estimated variance and a qualitative magnitude label. In the code, <code>print(delta_result)</code> displays the full report; <code>$estimate</code>, <code>$conf.int</code> and <code>$magnitude</code> extract individual components. The magnitude category is based on thresholds used by the package and should be treated as a descriptive convention, not a universal biological definition.</p>
 <h3>R example: exact test and normal approximation</h3>
-<p>Now run the same biofilm data in R. First request the exact test; then request the normal approximation with a continuity correction. The code runs in your browser using WebR.</p>
+<p>Now run the same biofilm data in R. The code requests the exact test, the normal approximation with a continuity correction, and then uses <code>cliff.delta()</code> from the <code>effsize</code> package to estimate Cliff's delta and its 95% confidence interval. On the first run, WebR downloads the package, so an internet connection is required and installation may take a little longer.</p>
 <p class="test-identification" style="padding:10px 14px;border-left:4px solid #1766a8;background:#edf5fc;color:#173e5e;border-radius:6px"><strong>Test: Mann–Whitney U test (also called the Wilcoxon rank-sum test) — independent groups</strong></p>
 <div class="code-card" style="margin:18px 0;padding:18px;border:1px solid #b8cfe5;border-radius:12px;background:#f7fbff">
   <div style="font-weight:700;margin-bottom:8px;color:#174f83">R code — edit and run</div>
@@ -218,7 +236,22 @@ wilcox.test(antibiotic, control,
 wilcox.test(antibiotic, control,
             alternative = "two.sided",
             exact = FALSE,
-            correct = TRUE)</textarea>
+            correct = TRUE)
+
+# Install and load the effsize package (first run requires internet)
+webr::install("effsize")
+library(effsize)
+
+# Estimate Cliff's delta and its 95% confidence interval
+delta_result <- cliff.delta(antibiotic, control, conf.level = 0.95)
+
+# Display the complete result
+print(delta_result)
+
+# Extract the main results separately
+delta_result$estimate
+delta_result$conf.int
+delta_result$magnitude
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
     <button id="runR" type="button" style="background:#0757a6;color:white;border:0;border-radius:7px;padding:10px 18px;font-weight:700;cursor:pointer">Run R code</button>
     <button id="resetR" type="button" style="background:#e7f0fa;color:#174f83;border:1px solid #9db8d2;border-radius:7px;padding:10px 18px;font-weight:700;cursor:pointer">Reset code</button>
