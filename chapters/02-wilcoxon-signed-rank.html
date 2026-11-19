@@ -105,21 +105,32 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#10283e;color:#f2f7fb
 <textarea id="rcode" spellcheck="false">before <- c(0.8, 1.0, 1.1, 1.2, 1.3, 1.4)
 after  <- c(1.6, 1.8, 1.9, 2.0, 2.2, 2.4)
 
-# Wilcoxon signed-rank test: normal approximation
-# Base R uses this approximation when tied absolute differences are present
+# Paired Wilcoxon signed-rank test.
+# Tied absolute differences mean base R uses the normal approximation here.
 wilcox.test(after, before,
             paired = TRUE,
             alternative = "two.sided",
             exact = FALSE,
             correct = TRUE)
 
-# The same test statistic can also be explored by enumerating
-# all 2^6 possible sign assignments for this small example.
-wilcox.test(after, before,
-            paired = TRUE,
-            alternative = "two.sided",
-            exact = FALSE,
-            correct = TRUE)</textarea>
+# Calculate signed ranks and the paired rank-biserial correlation.
+differences <- after - before
+nonzero <- differences != 0
+ranked_differences <- rank(abs(differences[nonzero]))
+signed_ranks <- sign(differences[nonzero]) * ranked_differences
+W_positive <- sum(ranked_differences[differences[nonzero] > 0])
+W_negative <- sum(ranked_differences[differences[nonzero] < 0])
+W_smaller <- min(W_positive, W_negative)
+rank_biserial <- (W_positive - W_negative) /
+                 (W_positive + W_negative)
+
+cat("Paired differences (After - Before):\n")
+print(differences)
+cat("Positive rank sum W+:", W_positive, "\n")
+cat("Negative rank sum W-:", W_negative, "\n")
+cat("Smaller rank sum W:", W_smaller, "\n")
+cat("Paired rank-biserial correlation:", rank_biserial, "\n")
+</textarea>
 <p><button id="runR">Run R code</button> <button id="resetR" type="button" style="background:#e7f0fa;color:#174f83;border:1px solid #9db8d2">Reset code</button></p>
 <p id="rstatus" class="small">Ready. An internet connection is required to load WebR.</p><pre id="rout" style="display:block;white-space:pre-wrap;overflow-wrap:anywhere;min-height:100px;margin:8px 0;padding:14px;border-radius:8px;background:#10283e!important;color:#ffffff!important;-webkit-text-fill-color:#ffffff;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;border:1px solid #315675">R output will appear here.</pre>
 <h3>Interpret the output</h3><p>R reports V, the sum of positive ranks: V = 21. This matches W<sup>+</sup> = 21 in our hand calculation. The complementary negative rank sum is W<sup>−</sup> = 0, so the smaller two-sided statistic is W = 0. The exact p-value is 0.03125. The normal approximation uses the tie-adjusted variance and gives a very similar p-value.</p>
@@ -196,8 +207,7 @@ ${code}
     const js = await result.toJs();
     const lines = Array.isArray(js) ? js :
       (js && Array.isArray(js.values) ? js.values : []);
-    const visibleOutput = lines.join('
-');
+    const visibleOutput = lines.join('\n');
     output.textContent = visibleOutput.trim() ||
       'R finished, but this code produced no visible output. Try print(object) to display a value.';
     status.textContent = 'R finished. Output is shown below.';
@@ -211,5 +221,35 @@ ${code}
 document.getElementById('resetR').addEventListener('click',()=>{document.getElementById('rcode').value=`before <- c(0.8, 1.0, 1.1, 1.2, 1.3, 1.4)
 after  <- c(1.6, 1.8, 1.9, 2.0, 2.2, 2.4)
 
-wilcox.test(after, before, paired = TRUE, exact = TRUE)`;});
+# Paired Wilcoxon signed-rank test.
+# Tied absolute differences mean base R uses the normal approximation here.
+wilcox.test(after, before,
+            paired = TRUE,
+            alternative = "two.sided",
+            exact = FALSE,
+            correct = TRUE)
+
+# Calculate signed ranks and the paired rank-biserial correlation.
+differences <- after - before
+nonzero <- differences != 0
+ranked_differences <- rank(abs(differences[nonzero]))
+signed_ranks <- sign(differences[nonzero]) * ranked_differences
+W_positive <- sum(ranked_differences[differences[nonzero] > 0])
+W_negative <- sum(ranked_differences[differences[nonzero] < 0])
+W_smaller <- min(W_positive, W_negative)
+rank_biserial <- (W_positive - W_negative) /
+                 (W_positive + W_negative)
+
+cat("Paired differences (After - Before):
+")
+print(differences)
+cat("Positive rank sum W+:", W_positive, "
+")
+cat("Negative rank sum W-:", W_negative, "
+")
+cat("Smaller rank sum W:", W_smaller, "
+")
+cat("Paired rank-biserial correlation:", rank_biserial, "
+")
+`;});
 </script></body></html>

@@ -227,7 +227,7 @@ U<sub>C</sub> + U<sub>A</sub> = n<sub>C</sub>n<sub>A</sub> = 36; report the smal
   <textarea id="rcode" spellcheck="false" style="width:100%;min-height:245px;padding:14px;border:1px solid #9db8d2;border-radius:8px;background:#fff;color:#172b3a;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace">control <- c(0.8, 1.0, 1.1, 1.2, 1.3, 1.4)
 antibiotic <- c(1.6, 1.8, 1.9, 2.0, 2.2, 2.4)
 
-# Exact Mann-Whitney test
+# Mann-Whitney test: exact p-value (no ties in this example)
 wilcox.test(antibiotic, control,
             alternative = "two.sided",
             exact = TRUE)
@@ -238,56 +238,40 @@ wilcox.test(antibiotic, control,
             exact = FALSE,
             correct = TRUE)
 
-# Install and load the effsize package (first run requires internet)
-webr::install("effsize")
-library(effsize)
+# Cliff's delta using the effsize package.
+# WebR needs a WebAssembly-compatible package build. If it is unavailable,
+# the code below calculates the same effect size directly from pairwise comparisons.
+delta_from_pairs <- function(x, y) {
+  comparisons <- outer(x, y, "-")
+  wins <- sum(comparisons > 0)
+  losses <- sum(comparisons < 0)
+  ties <- sum(comparisons == 0)
+  delta <- (wins - losses) / length(comparisons)
+  c(delta = delta, wins = wins, losses = losses, ties = ties,
+    total_pairs = length(comparisons))
+}
 
-# Estimate Cliff's delta and its 95% confidence interval
-delta_result <- cliff.delta(antibiotic, control, conf.level = 0.95)
+package_result <- tryCatch({
+  webr::install("effsize")
+  library(effsize)
+  delta_result <- cliff.delta(antibiotic, control, conf.level = 0.95)
+  print(delta_result)
+  cat("Cliff's delta (package estimate):", delta_result$estimate, "\n")
+  cat("95% CI:", delta_result$conf.int, "\n")
+  cat("Magnitude label:", as.character(delta_result$magnitude), "\n")
+  TRUE
+}, error = function(e) {
+  cat("The effsize package could not be loaded in this WebR session.\n")
+  cat("Using the equivalent pairwise calculation instead.\n")
+  cat("Package message:", conditionMessage(e), "\n")
+  FALSE
+})
 
-# Display the complete result
-print(delta_result)
-
-# Extract the main results separately
-delta_result$estimate
-delta_result$conf.int
-delta_result$magnitude
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-    <button id="runR" type="button" style="background:#0757a6;color:white;border:0;border-radius:7px;padding:10px 18px;font-weight:700;cursor:pointer">Run R code</button>
-    <button id="resetR" type="button" style="background:#e7f0fa;color:#174f83;border:1px solid #9db8d2;border-radius:7px;padding:10px 18px;font-weight:700;cursor:pointer">Reset code</button>
-  </div>
-  <p id="rstatus" aria-live="polite" style="margin:10px 0 6px;color:#52677b">Ready. An internet connection is required to load WebR.</p>
-  <pre id="rout" style="white-space:pre-wrap;overflow-wrap:anywhere;min-height:80px;margin:0;padding:12px;border-radius:8px;background:#10283e!important;color:#ffffff!important;-webkit-text-fill-color:#ffffff;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace">R output will appear here.</pre>
-</div>
-<h3>How to read the R output</h3>
-<p>R labels its reported test statistic <strong>W</strong>. For the two-sample test, the numerical value reported is the first group's rank sum minus n₁(n₁ + 1)/2 — that is, the corresponding U statistic for the first group. With the antibiotic group supplied first, R reports W = 36:</p>
-<div class="eq">
-  <div class="formula-line">U<sub>A</sub> = W = 36</div>
-  <div class="formula-line">U<sub>C</sub> = n<sub>A</sub>n<sub>C</sub> − U<sub>A</sub> = 36 − 36 = 0</div>
-  <div class="formula-line">U = min(U<sub>A</sub>, U<sub>C</sub>) = 0</div>
-</div>
-<p>The other group's statistic is U<sub>C</sub> = 36 − 36 = 0, so the smaller value is U = 0, matching our hand calculation. The exact two-sided p-value is approximately 0.00216. The normal approximation with continuity correction gives approximately 0.0051. Both lead to rejection of H<sub>0</sub> at α = 0.05, but the exact result is preferable for these small samples.</p>
-<p><strong>Teaching point:</strong> R labels the returned statistic W, but for the two-sample test its value is the U statistic for the first group. Our hand calculation reports both group-specific U values and then uses the smaller one.</p>
-
-<h3>Understand the output</h3>
-<ul><li>R labels the rank-sum statistic as <b>W</b>.</li><li>For the antibiotic group here, W = 57.</li><li>Its corresponding U is W − n(n+1)/2 = 57 − 21 = 36; the smaller U is 0.</li><li>The exact two-sided p-value is approximately 0.0022.</li></ul>
-<div class="note">If WebR cannot load because of a network restriction, copy the same code into R or RStudio. The statistical lesson and exercises remain usable.</div>
-</section>
-<section class="panel" id="practice"><div class="kicker">8 · Check your understanding</div><h2>Multiple-choice questions</h2>
-<div class="q" data-answer="b"><b>Question 1.</b> Which design calls for Mann–Whitney U?<label><input name="q1" type="radio" value="a"/> The same six samples measured before and after treatment.</label><label><input name="q1" type="radio" value="b"/> Two independent groups of biological cultures.</label><label><input name="q1" type="radio" value="c"/> Three repeated measurements from the same plants.</label><button onclick="checkQ(1)">Check answer</button><div class="feedback" id="f1"></div></div>
-<div class="q" data-answer="c"><b>Question 2.</b> In the worked example, R₁ = 21 and n₁ = 6. What is U₁?<label><input name="q2" type="radio" value="a"/> 21</label><label><input name="q2" type="radio" value="b"/> 36</label><label><input name="q2" type="radio" value="c"/> 0</label><button onclick="checkQ(2)">Check answer</button><div class="feedback" id="f2"></div></div>
-<div class="q" data-answer="a"><b>Question 3.</b> What does a significant Mann–Whitney result establish in general?<label><input name="q3" type="radio" value="a"/> Evidence that the population distributions differ.</label><label><input name="q3" type="radio" value="b"/> Proof that the population means differ.</label><label><input name="q3" type="radio" value="c"/> Proof that the medians differ, regardless of distribution shape.</label><button onclick="checkQ(3)">Check answer</button><div class="feedback" id="f3"></div></div>
-<div class="q" data-answer="b"><b>Question 4.</b> What does Cliff's delta = +1 mean in this example?<label><input name="q4" type="radio" value="a"/> The antibiotic group mean is exactly one unit higher.</label><label><input name="q4" type="radio" value="b"/> Every antibiotic observation exceeds every control observation.</label><label><input name="q4" type="radio" value="c"/> The p-value equals 1.</label><button onclick="checkQ(4)">Check answer</button><div class="feedback" id="f4"></div></div>
-<h3>Short calculation</h3><p>Suppose n₁ = 5 and n₂ = 7, and the rank sum for group 1 is R₁ = 24. Calculate U₁.</p>
-<input id="shortAnswer" placeholder="Enter your value" type="text"/>
-<button onclick="checkShort()">Check calculation</button><div class="feedback" id="shortFeedback"></div>
-</section>
-
-<section class="panel student-notes" id="student-notes">
-<div class="kicker">Your learning notes</div>
-<h2>Student notes</h2>
-<p>Use this space for your own explanations, questions, examples and reminders. Your notes are saved in this browser on this device. They are not sent to the course website.</p>
-<textarea id="studentNotes" aria-label="Your personal notes" placeholder="Write your notes here..."></textarea>
+# Always show the transparent pairwise calculation as a check.
+delta_manual <- delta_from_pairs(antibiotic, control)
+print(delta_manual)
+cat("Cliff's delta:", unname(delta_manual["delta"]), "\n")
+</textarea>
 <p class="notes-status" id="notesStatus" aria-live="polite">Notes are stored locally in this browser.</p>
 </section>
 <style>
@@ -346,8 +330,7 @@ ${code}
     const js = await result.toJs();
     const lines = Array.isArray(js) ? js :
       (js && Array.isArray(js.values) ? js.values : []);
-    const visibleOutput = lines.join('
-');
+    const visibleOutput = lines.join('\n');
     output.textContent = visibleOutput.trim() ||
       'R finished, but this code produced no visible output. Try print(object) to display a value.';
     status.textContent = 'R finished. Output is shown below.';
@@ -361,7 +344,56 @@ ${code}
 document.getElementById('resetR').addEventListener('click',()=>{document.getElementById('rcode').value=`control <- c(0.8, 1.0, 1.1, 1.2, 1.3, 1.4)
 antibiotic <- c(1.6, 1.8, 1.9, 2.0, 2.2, 2.4)
 
-summary(control)
-summary(antibiotic)
-wilcox.test(antibiotic, control, exact = TRUE)`;});
+# Mann-Whitney test: exact p-value (no ties in this example)
+wilcox.test(antibiotic, control,
+            alternative = "two.sided",
+            exact = TRUE)
+
+# Normal approximation with continuity correction
+wilcox.test(antibiotic, control,
+            alternative = "two.sided",
+            exact = FALSE,
+            correct = TRUE)
+
+# Cliff's delta using the effsize package.
+# WebR needs a WebAssembly-compatible package build. If it is unavailable,
+# the code below calculates the same effect size directly from pairwise comparisons.
+delta_from_pairs <- function(x, y) {
+  comparisons <- outer(x, y, "-")
+  wins <- sum(comparisons > 0)
+  losses <- sum(comparisons < 0)
+  ties <- sum(comparisons == 0)
+  delta <- (wins - losses) / length(comparisons)
+  c(delta = delta, wins = wins, losses = losses, ties = ties,
+    total_pairs = length(comparisons))
+}
+
+package_result <- tryCatch({
+  webr::install("effsize")
+  library(effsize)
+  delta_result <- cliff.delta(antibiotic, control, conf.level = 0.95)
+  print(delta_result)
+  cat("Cliff's delta (package estimate):", delta_result$estimate, "
+")
+  cat("95% CI:", delta_result$conf.int, "
+")
+  cat("Magnitude label:", as.character(delta_result$magnitude), "
+")
+  TRUE
+}, error = function(e) {
+  cat("The effsize package could not be loaded in this WebR session.
+")
+  cat("Using the equivalent pairwise calculation instead.
+")
+  cat("Package message:", conditionMessage(e), "
+")
+  FALSE
+})
+
+# Always show the transparent pairwise calculation as a check.
+delta_manual <- delta_from_pairs(antibiotic, control)
+print(delta_manual)
+cat("Cliff's delta:", unname(delta_manual["delta"]), "
+")
+`;});
 </script></body></html>
