@@ -100,17 +100,21 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#10283e;color:#f2f7fb
 <p>Here r<sub>rb</sub> = +1: all observed paired differences are in the hypothesised positive direction. This is complete directional consistency in this sample; it does not mean gene expression increased by 100%.</p>
 </section>
 <section class="panel" id="r"><div class="kicker">9 · R example</div><h2>Run the paired Wilcoxon test in R</h2>
-<p>Use <code>paired = TRUE</code> so R analyses the within-sample differences. Base R's <code>wilcox.test()</code> can calculate an <strong>exact p-value even when there are tied absolute differences</strong>, using the conditional/permutation distribution given the observed ranks. We request that exact calculation first, then run the normal approximation for comparison.</p>
+<p>Use <code>paired = TRUE</code> so R analyses the within-sample differences. In base R, <code>wilcox.test()</code> does not calculate its exact p-value when tied absolute differences are present; it falls back to a normal approximation and issues a warning. The code below therefore demonstrates the normal approximation. For an exact conditional sign-permutation calculation with ties, the sign assignments can be enumerated for this small teaching example.</p>
+<p class="test-identification" style="padding:10px 14px;border-left:4px solid #1766a8;background:#edf5fc;color:#173e5e;border-radius:6px"><strong>Test: Wilcoxon signed-rank test — paired observations</strong></p>
 <textarea id="rcode" spellcheck="false">before <- c(0.8, 1.0, 1.1, 1.2, 1.3, 1.4)
 after  <- c(1.6, 1.8, 1.9, 2.0, 2.2, 2.4)
 
-# Exact Wilcoxon signed-rank test (ties are allowed)
+# Wilcoxon signed-rank test: normal approximation
+# Base R uses this approximation when tied absolute differences are present
 wilcox.test(after, before,
             paired = TRUE,
             alternative = "two.sided",
-            exact = TRUE)
+            exact = FALSE,
+            correct = TRUE)
 
-# Normal approximation with tie and continuity corrections
+# The same test statistic can also be explored by enumerating
+# all 2^6 possible sign assignments for this small example.
 wilcox.test(after, before,
             paired = TRUE,
             alternative = "two.sided",
@@ -155,21 +159,56 @@ wilcox.test(after, before,
 </main>
 <script>
 function feedback(name,ans,id,msg){const x=document.querySelector('input[name="'+name+'"]:checked');const f=document.getElementById(id);if(!x){f.textContent='Choose an answer first.';f.className='feedback incorrect';return;}f.textContent=x.value===ans?msg:'Not quite. Review the explanation and try again.';f.className='feedback '+(x.value===ans?'correct':'incorrect');}
-let webR=null;
-document.getElementById('runR').addEventListener('click',async()=>{
- const btn=document.getElementById('runR'),status=document.getElementById('rstatus'),out=document.getElementById('rout');
- btn.disabled=true; status.textContent='Loading WebR…'; out.textContent='';
- try {
-   if(!webR){const mod=await import('https://webr.r-wasm.org/latest/webr.mjs');webR=new mod.WebR();await webR.init();}
-   status.textContent='Running R code…';
-   // Evaluate each top-level expression and capture explicit print() calls
-   // as well as automatically visible results (for example, wilcox.test(...)).
-   await webR.FS.writeFile('/tmp/student-code.R', document.getElementById('rcode').value);
-   const result = await webR.evalRString("paste(capture.output({ exprs <- parse('/tmp/student-code.R'); for (expr in exprs) { result <- withVisible(eval(expr, envir=.GlobalEnv)); if (result$visible) print(result$value) } }), collapse='\\n')");
-   out.textContent=(result && String(result).trim().length) ? String(result) : 'R ran successfully, but this code did not produce printable output. Try entering an object name (for example, results) or use print(results).';
-   status.textContent='R finished. Output is shown below.';
- } catch(e) { status.textContent='R execution error. Check the code below.'; out.textContent=String(e); }
- finally { btn.disabled=false; }
+let webR = null;
+let webRInitPromise = null;
+
+async function getWebR() {
+  if (webR) return webR;
+  if (!webRInitPromise) {
+    webRInitPromise = (async () => {
+      const mod = await import("https://webr.r-wasm.org/latest/webr.mjs");
+      const runtime = new mod.WebR();
+      await runtime.init();
+      webR = runtime;
+      return webR;
+    })();
+  }
+  try { return await webRInitPromise; }
+  catch (err) { webRInitPromise = null; throw err; }
+}
+
+document.getElementById('runR').addEventListener('click', async () => {
+  const btn = document.getElementById('runR');
+  const status = document.getElementById('rstatus');
+  const out = document.getElementById('rout');
+  btn.disabled = true;
+  status.textContent = 'Loading WebR…';
+  out.textContent = '';
+  try {
+    const runtime = await getWebR();
+    status.textContent = 'Running R code…';
+    const code = document.getElementById('rcode').value;
+    // Parse and evaluate each top-level R expression separately. This reproduces
+    // the visible auto-printing students get in the R console, including test output.
+    const rCodeLiteral = JSON.stringify(code);
+    const result = await runtime.evalR(`capture.output({
+      .course_exprs <- parse(text = ${rCodeLiteral})
+      for (.course_expr in .course_exprs) {
+        .course_visible <- withVisible(eval(.course_expr, envir = .GlobalEnv))
+        if (.course_visible$visible) print(.course_visible$value)
+      }
+    })`);
+    const js = await result.toJs();
+    let outputText = Array.isArray(js) ? js.join("\n") :
+      (js && Array.isArray(js.values) ? js.values.join("\n") : String(js ?? ""));
+    out.textContent = outputText.trim() || 'R ran successfully, but this code produced no visible output. Add print(object) to display an object created by an assignment.';
+    status.textContent = 'R finished successfully.';
+  } catch (err) {
+    status.textContent = 'R could not run. Check your internet connection and try again.';
+    out.textContent = (err && err.message) ? err.message : String(err);
+  } finally {
+    btn.disabled = false;
+  }
 });
 document.getElementById('resetR').addEventListener('click',()=>{document.getElementById('rcode').value=`before <- c(0.8, 1.0, 1.1, 1.2, 1.3, 1.4)
 after  <- c(1.6, 1.8, 1.9, 2.0, 2.2, 2.4)
