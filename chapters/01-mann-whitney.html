@@ -282,12 +282,11 @@ document.getElementById('runR').addEventListener('click',async()=>{
  try {
    if(!webR){const mod=await import('https://webr.r-wasm.org/latest/webr.mjs');webR=new mod.WebR();await webR.init();}
    status.textContent='Running R code…';
-   // Write the student's code to a virtual file, then capture visible top-level results.
+   // Evaluate each top-level expression and capture explicit print() calls
+   // as well as automatically visible results (for example, wilcox.test(...)).
    await webR.FS.writeFile('/tmp/student-code.R', document.getElementById('rcode').value);
-   await webR.evalRVoid("capture.output({ exprs <- parse('/tmp/student-code.R'); for (expr in exprs) { result <- withVisible(eval(expr, envir=.GlobalEnv)); if (result$visible) print(result$value) } }, file='/tmp/student-output.txt')");
-   const resultBytes=await webR.FS.readFile('/tmp/student-output.txt');
-   const result=typeof resultBytes === 'string' ? resultBytes : new TextDecoder('utf-8').decode(resultBytes);
-   out.textContent=(result && result.trim().length) ? result : 'R finished, but no visible output was produced. Use print() for values you want to display.';
+   const result = await webR.evalRString("paste(capture.output({ exprs <- parse('/tmp/student-code.R'); for (expr in exprs) { result <- withVisible(eval(expr, envir=.GlobalEnv)); if (result$visible) print(result$value) } }), collapse='\\n')");
+   out.textContent=(result && String(result).trim().length) ? String(result) : 'R ran successfully, but this code did not produce printable output. Try entering an object name (for example, results) or use print(results).';
    status.textContent='R finished. Output is shown below.';
  } catch(e) { status.textContent='R execution error. Check the code below.'; out.textContent=String(e); }
  finally { btn.disabled=false; }
