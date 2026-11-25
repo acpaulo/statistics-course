@@ -1,0 +1,33 @@
+<script>
+(function () {
+  function preparePrintCode() {
+    document.querySelectorAll('textarea#rcode').forEach(function (area) {
+      if (area.nextElementSibling && area.nextElementSibling.classList.contains('print-code-copy')) return;
+      var pre = document.createElement('pre');
+      pre.className = 'print-code-copy';
+      pre.textContent = area.value;
+      area.insertAdjacentElement('afterend', pre);
+    });
+    document.querySelectorAll('pre.r-output').forEach(function (output) {
+      output.classList.add('print-output-copy');
+    });
+  }
+
+  function clearPrintCode() {
+    document.querySelectorAll('.print-code-copy').forEach(function (node) {
+      node.remove();
+    });
+    document.querySelectorAll('pre.r-output').forEach(function (output) {
+      output.classList.remove('print-output-copy');
+    });
+  }
+
+  window.addEventListener('beforeprint', preparePrintCode);
+  window.addEventListener('afterprint', clearPrintCode);
+  document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('keydown', function (event) {
+      if ((event.key === 'p' || event.key === 'P') && event.altKey) preparePrintCode();
+    });
+  });
+})();
+</script>

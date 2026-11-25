@@ -1,0 +1,9 @@
+project:
+  type: default
+  output-dir: .
+  render:
+    - index.qmd
+    - chapter-1-slides.qmd
+    - chapter-2-slides.qmd
+    - chapter-3-slides.qmd
+    - chapter-4-slides.qmd
