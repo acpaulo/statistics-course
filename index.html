@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biostatistics — Molecular Biosciences</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;max-width:860px;margin:0 auto;padding:40px 24px;color:#14233a;background:#f8f9fd;line-height:1.5}
+h1{color:#0b4fa8;margin:0 0 4px}p.sub{margin:0 0 28px;color:#3b5775;font-size:1.1em}
+a.card{display:block;text-decoration:none;color:inherit;background:#fff;border:2px solid #cfe0f3;border-radius:12px;padding:16px 20px;margin:12px 0}
+a.card:hover{border-color:#0b4fa8;background:#f1f7ff}
+a.card strong{display:block;color:#0b4fa8;font-size:1.15em}a.card span{color:#3b5775}
+p.note{margin-top:28px;color:#3b5775;font-size:.95em}
+</style>
+</head>
+<body>
+<h1>Biostatistics — Molecular Biosciences</h1>
+<p class="sub">Interactive lecture chapters</p>
+<a class="card" href="chapter-1-slides.html"><strong>Chapter 1 — Mann–Whitney U test</strong><span>Two independent groups</span></a>
+<a class="card" href="chapter-2-slides.html"><strong>Chapter 2 — Wilcoxon signed-rank test</strong><span>Two paired conditions</span></a>
+<a class="card" href="chapter-3-slides.html"><strong>Chapter 3 — Kruskal–Wallis test</strong><span>Three or more independent groups</span></a>
+<a class="card" href="chapter-4-slides.html"><strong>Chapter 4 — Friedman test</strong><span>Three or more related conditions</span></a>
+<a class="card" href="chapter-5-slides.html"><strong>Chapter 5 — Categorical data: chi-square and Fisher's exact tests</strong><span>Counts in categories, 2 × 2 tables</span></a>
+<a class="card" href="chapter-6-slides.html"><strong>Chapter 6 — Correlation: Pearson and Spearman</strong><span>Two measured variables, ranks, confidence intervals</span></a>
+<a class="card" href="chapter-7-slides.html"><strong>Chapter 7 — Simple linear regression</strong><span>Least squares, residual checks, prediction</span></a>
+<a class="card" href="chapter-8-slides.html"><strong>Chapter 8 — Logistic regression</strong><span>Yes / no outcome, odds ratio, ID50</span></a>
+<a class="card" href="chapter-9-slides.html"><strong>Chapter 9 — Principal component analysis</strong><span>Eigenvalues, loadings, scores, biplot</span></a>
+<p class="note">Each chapter follows one experiment from the biological question to the interpretation: method choice, assumptions and hypotheses, worked calculation, p-value, post-hoc comparisons, effect size, a browser-based R practical, practice questions, student notes and a recap infographic. An internet connection is needed for the slides, formulas and the R editor.</p>
+<noscript><p class="note">JavaScript is off: use the links above.</p></noscript>
+<p class="note" id="warn" style="display:none;color:#b03a2e"></p>
+<script>
+/* Finds the chapter files whether they sit next to this page or in a "course/" subfolder, and says so if they are missing. */
+(function(){
+  if(location.protocol==="file:")return;
+  var links=[].slice.call(document.querySelectorAll("a.card")),missing=[];
+  links.forEach(function(a){
+    var f=a.getAttribute("href");
+    fetch(f,{method:"HEAD"}).then(function(r){if(!r.ok)throw 0;}).catch(function(){
+      return fetch("course/"+f,{method:"HEAD"}).then(function(r){if(!r.ok)throw 0;a.setAttribute("href","course/"+f);}).catch(function(){
+        missing.push(f);var w=document.getElementById("warn");w.style.display="block";
+        w.textContent="Not found on this site: "+missing.join(", ")+". Upload these files to the same folder as index.html.";a.style.opacity=.5;});
+    });
+  });
+})();
+</script>
+</body>
+</html>

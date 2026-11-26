@@ -1,0 +1,16 @@
+---
+title: "Biostatistics — Molecular Biosciences"
+subtitle: "Interactive lecture chapters"
+---
+
+1. [**Chapter 1 — Mann–Whitney U test**](chapter-1-slides.html): two independent groups.
+2. [**Chapter 2 — Wilcoxon signed-rank test**](chapter-2-slides.html): two paired conditions.
+3. [**Chapter 3 — Kruskal–Wallis test**](chapter-3-slides.html): three or more independent groups.
+4. [**Chapter 4 — Friedman test**](chapter-4-slides.html): three or more related conditions.
+5. [**Chapter 5 — Categorical data**](chapter-5-slides.html): chi-square and Fisher's exact tests.
+6. [**Chapter 6 — Correlation**](chapter-6-slides.html): Pearson and Spearman.
+7. [**Chapter 7 — Simple linear regression**](chapter-7-slides.html): least squares, residuals, prediction.
+8. [**Chapter 8 — Logistic regression**](chapter-8-slides.html): odds ratio and ID50.
+9. [**Chapter 9 — Principal component analysis**](chapter-9-slides.html): eigenvalues, loadings, biplot.
+
+(`index.html` is hand-written; edit it directly to change the landing page.)
